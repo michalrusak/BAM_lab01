@@ -1,0 +1,13 @@
+docker exec -it <mysql_container_id> mysql -uuser -ppassword auth_db
+
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  login VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL
+);
+
+docker-compose up -d
+
+
+node server.js
