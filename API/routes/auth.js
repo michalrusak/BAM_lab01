@@ -6,27 +6,39 @@ require("dotenv").config();
 
 const router = express.Router();
 
-// Rejestracja
+
 router.post("/register", async (req, res) => {
-  const { login, password } = req.body;
+  const { username, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await pool.query(
       "INSERT INTO users (login, password) VALUES (?, ?)",
-      [login, hashedPassword]
+      [username, hashedPassword]
     );
     res.status(201).json({ message: "Użytkownik zarejestrowany!" });
   } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
+router.get("/users", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT id, login FROM users");
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Błąd serwera" });
   }
 });
 
-// Logowanie
+
 router.post("/login", async (req, res) => {
-  const { login, password } = req.body;
+  const { username, password } = req.body;
   try {
     const [rows] = await pool.query("SELECT * FROM users WHERE login = ?", [
-      login,
+      username,
     ]);
     if (rows.length === 0) {
       return res.status(404).json({ error: "Nie znaleziono użytkownika" });
@@ -39,7 +51,7 @@ router.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, login: user.login },
+      { id: user.id, username: user.username },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
